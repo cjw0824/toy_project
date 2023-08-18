@@ -26,10 +26,10 @@ public class SignUpServiceImpl implements SignUpService{
         log.info(member.getUserId());
 
         if(maybeMember.isPresent()) {
-            log.info("ido");
+            log.info("존재하는id");
             return false;
         } else {
-            log.info("idx");
+            log.info("가입가능한id");
 
             signUpRepository.save(member);
             return true;
