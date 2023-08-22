@@ -1,8 +1,7 @@
 package com.example.demo.signUp.service;
 
-import com.example.demo.signUp.entity.Member;
-import com.example.demo.signUp.form.RequestSigUpForm;
+import com.example.demo.signUp.controller.form.SignUpRequestForm;
 
 public interface SignUpService {
-    Boolean signUp(Member member);
+    boolean register(SignUpRequestForm requestForm);
 }

@@ -1,7 +1,7 @@
 package com.example.demo.signUp.service;
 
+import com.example.demo.signUp.controller.form.SignUpRequestForm;
 import com.example.demo.signUp.entity.Member;
-import com.example.demo.signUp.form.RequestSigUpForm;
 import com.example.demo.signUp.repository.SignUpRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,26 +14,23 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class SignUpServiceImpl implements SignUpService{
 
-    final private SignUpRepository signUpRepository;
-//    final private SignUpService signUpService;
+    private final SignUpRepository signUpRepository;
+
     @Override
-    public Boolean signUp(Member member) {
-        // 해당 아이디가 중복되는지 확인한다
-        // 존재하면 그냥 리턴으로 나간다.
-        // 존재하지 않으면 등록 리턴으로 나간다.
+    public boolean register(SignUpRequestForm requestForm) {
+        // 1. 해당 아이디가 존재하는 지?
+        Optional<Member> maybeMember = signUpRepository.findByUserId(requestForm.getUserId());
+        log.info("maybeMember", maybeMember);
 
-        Optional<Member> maybeMember = signUpRepository.findByUserId(member.getUserId());
-        log.info(member.getUserId());
-
+        // 1-1 (존재 시) false 혹은 return
         if(maybeMember.isPresent()) {
-            log.info("존재하는id");
+            log.info("존재하는 아이디 입니다.");
             return false;
-        } else {
-            log.info("가입가능한id");
-
-            signUpRepository.save(member);
-            return true;
         }
 
+        // 1-2 (미존재) -> 등록 ! true 혹은 return
+        Member member = requestForm.toMember();
+        signUpRepository.save(member);
+        return true;
     }
 }

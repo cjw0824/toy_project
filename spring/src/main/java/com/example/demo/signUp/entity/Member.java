@@ -1,41 +1,30 @@
 package com.example.demo.signUp.entity;
 
-import com.example.demo.signUp.form.RequestSigUpForm;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
-@Setter
 @Getter
-//@RequiredArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Member {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String userId;
-    private String userPw;
-    private String tel;
 
-    public Member(String userId, String userPw, String tel) {
+    private String userId;
+
+    private String userPw;
+
+    private String userAddress;
+
+    private String userPhone;
+
+    public Member(String userId, String userPw, String userAddress, String userPhone) {
         this.userId = userId;
         this.userPw = userPw;
-        this.tel = tel;
+        this.userAddress = userAddress;
+        this.userPhone = userPhone;
     }
-
-    //    Member toMember(RequestSigUpForm requestSigUpForm){
-//
-//        Member member = new Member();
-//        member.setUserId(requestSigUpForm.getUserId());
-//        member.setUserPw(requestSigUpForm.getUserPw());
-//        member.setTel(requestSigUpForm.getTel());
-//
-//        return member;
-//    }
 }
