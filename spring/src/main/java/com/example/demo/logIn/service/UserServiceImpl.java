@@ -3,7 +3,6 @@ package com.example.demo.logIn.service;
 import com.example.demo.logIn.dto.NaverOAuthToken;
 import com.example.demo.logIn.entity.User;
 import com.example.demo.logIn.repository.UserRepository;
-import com.example.demo.logIn.service.response.NaverOauthAccountInfoResponse;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -15,14 +14,13 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
-import java.util.Map;
+import java.util.Optional;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     final private RestTemplate restTemplate;
-    //inal private PropertyUtil propertyUtil;
     final private UserRepository userRepository;
     @Override
     public String getAuthorizeCode() {
@@ -30,25 +28,8 @@ public class UserServiceImpl implements UserService {
         return URL;
     }
 
-
-//    public String getAccessToken(String code) {
-//        final String REQUEST_NAVER_ACCESS_TOKEN_URL =
-//                //"https://github.com/login/oauth/access_token";
-//                "https://nid.naver.com/oauth2.0/token";
-//        //final String CLIENT_ID = propertyUtil.getProperty("client_id");
-//        final String CLIENT_ID = "U7Yh4r05YNQObUFWynhN";
-//        //final String CLIENT_SECRETS = propertyUtil.getProperty("client_secrets");
-//        final String CLIENT_SECRETS = "sTfNNHXkCC";
-//
-//        return restTemplate.postForObject(
-//                REQUEST_NAVER_ACCESS_TOKEN_URL,
-//                new NaverOauthTokenRequest(CLIENT_ID, CLIENT_SECRETS, code),
-//                NaverOauthAccessTokenResponse.class).getAccessToken();
-//    }
     @Override
     public NaverOAuthToken generateAccessToken(String code){
-
-
         // HTTP Header 생성
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
@@ -69,90 +50,63 @@ public class UserServiceImpl implements UserService {
         ResponseEntity<NaverOAuthToken> response
                 = restTemplate.exchange("https://nid.naver.com/oauth2.0/token", HttpMethod.POST, tokenRequest, NaverOAuthToken.class);
 
-        System.out.println("response" + response);
+        System.out.println("response : " + response);
         //System.out.println(response);
-        System.out.println(response.getBody().getAccess_token());
+        String accessToken = response.getBody().getAccess_token();
+        System.out.println("accessToken : " + accessToken);
 
+        User user = getNaverUserInfo(accessToken, headers);
 
-        System.out.println("사용자 정보가져오기");
-        //HttpHeaders headers2 = new HttpHeaders();
-        headers.add("Authorization", "Bearer " + response.getBody().getAccess_token());
+        Optional<User> maybeUser = userRepository.findById(user.getId());
+        if(maybeUser.isPresent()) {
+            System.out.println("maybeUser is present");
+            return null;
 
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity(headers);
-        RestTemplate restTemplate2 = new RestTemplate();
-        ResponseEntity<String> response2 = restTemplate2.exchange("https://openapi.naver.com/v1/nid/me", HttpMethod.POST, request, String.class);
-        System.out.println("response2 = " + response2);
-
-
-        // HTTP 응답 받아오기
-        String responseBody = response2.getBody();
-        System.out.println("responseBody = " + responseBody);
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            JsonNode jsonNode = objectMapper.readTree(responseBody);
-            String nickname = jsonNode.get("response").get("nickname").asText();
-            String profile_image = jsonNode.get("response").get("profile_image").asText();
-            String age = jsonNode.get("response").get("age").asText();
-            String gender = jsonNode.get("response").get("gender").asText();
-            String mobile = jsonNode.get("response").get("mobile").asText();
-            String name = jsonNode.get("response").get("name").asText();
-
-            User user = new User(nickname, profile_image, age, gender, mobile, name);
-
-            userRepository.save(user);
-            //Map<String, Object> jsonMap = objectMapper.readValue(responseBody, Map.class);
-        } catch (IOException e) {
-            // 예외 처리
-            e.printStackTrace();
+        } else {
+            if(user != null) {
+                userRepository.save(user);
+            } else {
+                System.out.println("user is null");
+            }
         }
 
 
         return response.getBody();
     }
 
-    @Override
-    public String getNaverUserInfo(String code) {
-        // accessToken 생성
-        String accessToken = generateAccessToken(code).toString();
 
-        // HTTP Header 생성
-        HttpHeaders headers = new HttpHeaders();
+    //사용자 정보가져오기
+    @Override
+    public User getNaverUserInfo(String accessToken, HttpHeaders headers) {
+
+        System.out.println("사용자 정보가져오기");
         headers.add("Authorization", "Bearer " + accessToken);
-        headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
 
-        // HTTP 요청 보내기
-        HttpEntity<MultiValueMap<String, String>> naverUserInfoRequest = new HttpEntity<>(headers);
-        RestTemplate rt = new RestTemplate();
-        ResponseEntity<String> response2 = rt.exchange(
-                "https://openapi.naver.com/v1/nid/me",
-                HttpMethod.POST,
-                naverUserInfoRequest,
-                String.class
-        );
+        HttpEntity<MultiValueMap<String, String>> UserInfoRequest = new HttpEntity(headers);
+        RestTemplate userInfoRestTemplate = new RestTemplate();
+        ResponseEntity<String> userInfoResponse = userInfoRestTemplate.exchange("https://openapi.naver.com/v1/nid/me", HttpMethod.POST, UserInfoRequest, String.class);
+        System.out.println("user info response = " + userInfoResponse);
 
-        System.out.println("response2" + response2);
+        // HTTP 응답 받아오기
+        String userInfoResponseBody = userInfoResponse.getBody();
+        System.out.println("userInfoResponseBody = " + userInfoResponseBody);
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            JsonNode jsonNode = objectMapper.readTree(userInfoResponseBody);
+            String nickname = jsonNode.get("response").get("nickname").asText();
+            String profile_image = jsonNode.get("response").get("profile_image").asText();
+            String age = jsonNode.get("response").get("age").asText().substring(0,2);
+            String gender = jsonNode.get("response").get("gender").asText();
+            String mobile = jsonNode.get("response").get("mobile").asText();
+            String name = jsonNode.get("response").get("name").asText();
+            String id = jsonNode.get("response").get("id").asText();
 
-        return response2.getBody();
-
-    }
-
-    @Override
-    public NaverOauthAccountInfoResponse getAccountInfo(String accessToken) {
-        final String REQUEST_GITHUB_USER_API_URL =
-                "https://openapi.naver.com/v1/nid/me";
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(accessToken);
-        //이렇게 생성된 HttpEntity 객체는 요청에 헤더만 포함하며 본문은 가지지 않습니다.
-        HttpEntity<Void> request = new HttpEntity<>(headers);
-
-        NaverOauthAccountInfoResponse response = restTemplate.exchange(
-                REQUEST_GITHUB_USER_API_URL,
-                HttpMethod.GET,
-                request,
-                NaverOauthAccountInfoResponse.class).getBody();
-
-        log.info("result: " + response);
-        return response;
+            User user = new User(nickname, profile_image, age, gender, mobile, name, id);
+            return user;
+        } catch (IOException e) {
+            // 예외 처리
+            e.printStackTrace();
+            return null;
+        }
     }
 }
