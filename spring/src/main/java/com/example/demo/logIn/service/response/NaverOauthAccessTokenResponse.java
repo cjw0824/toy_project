@@ -12,4 +12,8 @@ public class NaverOauthAccessTokenResponse {
 
     @JsonProperty("access_token")
     private String accessToken;
+
+    public String getAccessToken() {
+        return accessToken;
+    }
 }

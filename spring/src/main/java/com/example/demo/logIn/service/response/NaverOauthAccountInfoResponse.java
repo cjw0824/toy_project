@@ -11,21 +11,40 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 public class NaverOauthAccountInfoResponse {
-    @JsonProperty("id")
-    private String id;
 
-    @JsonProperty("login")
+    @JsonProperty("name")
     private String name;
 
-    @JsonProperty("email")
-    private String email;
+    @JsonProperty("nickname")
+    private String nickname;
 
-    @JsonProperty("avatar_url")
-    private String avatarUrl;
+    @JsonProperty("profile_image")
+    private String profile_image;
 
-    @JsonProperty("html_url")
-    private String githubRepository;
+    @JsonProperty("gender")
+    private String gender;
 
-    @JsonProperty("public_repos")
-    private Long publicRepositoryNumber;
+    @JsonProperty("birthyear")
+    private String birthyear;
+
+    @JsonProperty("mobile")
+    private String mobile;
+
+//    @JsonProperty("id")
+//    private String id;
+//
+//    @JsonProperty("login")
+//    private String name;
+//
+//    @JsonProperty("email")
+//    private String email;
+//
+//    @JsonProperty("avatar_url")
+//    private String avatarUrl;
+//
+//    @JsonProperty("html_url")
+//    private String githubRepository;
+//
+//    @JsonProperty("public_repos")
+//    private Long publicRepositoryNumber;
 }
