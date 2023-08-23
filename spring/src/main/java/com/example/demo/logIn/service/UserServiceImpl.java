@@ -1,6 +1,8 @@
 package com.example.demo.logIn.service;
 
 import com.example.demo.logIn.dto.NaverOAuthToken;
+import com.example.demo.logIn.entity.User;
+import com.example.demo.logIn.repository.UserRepository;
 import com.example.demo.logIn.service.response.NaverOauthAccountInfoResponse;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,6 +23,7 @@ import java.util.Map;
 public class UserServiceImpl implements UserService {
     final private RestTemplate restTemplate;
     //inal private PropertyUtil propertyUtil;
+    final private UserRepository userRepository;
     @Override
     public String getAuthorizeCode() {
         final String URL = "https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=U7Yh4r05YNQObUFWynhN&redirect_uri=http://localhost:8080/authentication/naver/login&state=1234";
@@ -44,6 +47,8 @@ public class UserServiceImpl implements UserService {
 //    }
     @Override
     public NaverOAuthToken generateAccessToken(String code){
+
+
         // HTTP Header 생성
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
@@ -87,9 +92,14 @@ public class UserServiceImpl implements UserService {
             JsonNode jsonNode = objectMapper.readTree(responseBody);
             String nickname = jsonNode.get("response").get("nickname").asText();
             String profile_image = jsonNode.get("response").get("profile_image").asText();
-            String nickname = jsonNode.get("response").get("nickname").asText();
+            String age = jsonNode.get("response").get("age").asText();
             String gender = jsonNode.get("response").get("gender").asText();
-            System.out.println("gender : " + gender);
+            String mobile = jsonNode.get("response").get("mobile").asText();
+            String name = jsonNode.get("response").get("name").asText();
+
+            User user = new User(nickname, profile_image, age, gender, mobile, name);
+
+            userRepository.save(user);
             //Map<String, Object> jsonMap = objectMapper.readValue(responseBody, Map.class);
         } catch (IOException e) {
             // 예외 처리
