@@ -12,6 +12,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
 import java.util.Map;
 
 @Service
@@ -82,10 +83,18 @@ public class UserServiceImpl implements UserService {
         String responseBody = response2.getBody();
         System.out.println("responseBody = " + responseBody);
         ObjectMapper objectMapper = new ObjectMapper();
-        //JsonNode jsonNode = objectMapper.readTree(responseBody);
-        Map<String, Object> jsonMap;
-        jsonMap = objectMapper.readValue(responseBody, Map.class);
-
+        try {
+            JsonNode jsonNode = objectMapper.readTree(responseBody);
+            String nickname = jsonNode.get("response").get("nickname").asText();
+            String profile_image = jsonNode.get("response").get("profile_image").asText();
+            String nickname = jsonNode.get("response").get("nickname").asText();
+            String gender = jsonNode.get("response").get("gender").asText();
+            System.out.println("gender : " + gender);
+            //Map<String, Object> jsonMap = objectMapper.readValue(responseBody, Map.class);
+        } catch (IOException e) {
+            // 예외 처리
+            e.printStackTrace();
+        }
 
 
         return response.getBody();
